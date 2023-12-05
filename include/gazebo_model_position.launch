@@ -1,0 +1,5 @@
+<launch>
+    <node pkg="my_robots" type="gazebo_model_position.py" name="set_model" output="screen">
+
+    </node>
+</launch>

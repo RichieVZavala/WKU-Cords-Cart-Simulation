@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+    <param name="robot_description" command="cat '$(find my_robots)/cords_bot.urdf'" />
+     
+    
+    <node name="mybot_spawn" pkg="gazebo_ros" type="spawn_model" output="screen"
+          args="-urdf -param robot_description -model cords_bot -z 1" />
+          
+    <!--<node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args="1 0 0 0 0 0 1 odom link_chassis 100" />-->
+    <!--<node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" output="screen" />-->
+<node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" output="screen"
+args="-urdf -param robot_description -model cords_bot -z 1"/>
+  <node pkg="rviz" type="rviz" name="rviz" output="screen"/>
+<node pkg="joint_state_publisher" type="joint_state_publisher" name="joint_state_publisher" output="screen"
+args="-urdf -param robot_description -model cords_bot -z 1"/>
+<include file="$(find gazebo_ros)/launch/empty_world.launch">
+  <arg name="world_name" default="worlds/test.world"/>
+  </include>
+
+<arg name="scan_topic" default="/cords_bot/laser/scan" />
+<arg name="base_frame" default="/link_chassis" />
+<arg name="odom_frame" default="odom"/>
+
+<!--<node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen">
+    <param name="base_frame" value="$(arg base_frame)"/>
+    <param name="odom_frame" value="$(arg odom_frame)"/>
+    <param name="map_update_interval" value="5.0"/>
+    <param name="maxUrange" value="6.0"/>
+    <param name="maxRange" value="8.0"/>
+    <param name="sigma" value="0.05"/>
+    <param name="kernelSize" value="1"/>
+    <param name="lstep" value="0.05"/>
+    <param name="astep" value="0.05"/>
+    <param name="iterations" value="5"/>
+    <param name="lsigma" value="0.075"/>
+    <param name="ogain" value="3.0"/>
+    <param name="lskip" value="0"/>
+    <param name="minimumScore" value="200"/>
+    <param name="srr" value="0.01"/>
+    <param name="srt" value="0.02"/>
+    <param name="str" value="0.01"/>
+    <param name="stt" value="0.02"/>
+    <param name="linearUpdate" value="0.5"/>
+    <param name="angularUpdate" value="0.436"/>
+    <param name="temporalUpdate" value="-1.0"/>
+    <param name="resampleThreshold" value="0.05"/>
+    <param name="particles" value="80"/>
+
+
+    <param name="xmin" value="-1.0"/>
+    <param name="ymin" value="-1.0"/>
+    <param name="xmax" value="1.0"/>
+    <param name="ymax" value="1.0"/>
+
+    <param name="delta" value="0.05"/>
+    <param name="llsamplerange" value="0.01"/>
+    <param name="llsamplestep" value="0.01"/>
+    <param name="lasamplerange" value="0.005"/>
+    <param name="lassamplestep" value="0.005"/>
+    <remap from="scan" to="$(arg scan_topic)"/>
+</node>-->
+ <!--
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+    
+    <param name="base_global_planner" type="string" value="navfn/NavfnROS" />
+    <param name="base_local_planner" value="base_local_planner/TrajectoryPlannerROS"/>
+    
+    <remap from="odom" to="odometry/filtered" />
+  </node>-->
+
+    <node pkg="move_base" type="move_base" respawn="true" name="move_base" output="screen">
+    <remap from="cmd_vel" to="my_gen3/cords_bot/cmd_vel"/>
+    <remap from="base_link" to="/link_chassis"/>
+
+    <rosparam file="$(find my_robots)/config/costmap_common_params.yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find my_robots)/config/costmap_common_params.yaml" command="load" ns="local_costmap" />
+    
+    <rosparam file="$(find my_robots)/config/local_costmap_params.yaml" command="load" ns="local_costmap"/>
+    <rosparam file="$(find my_robots)/config/global_costmap_params.yaml" command="load" ns="global_costmap"/>
+    
+    <rosparam file="$(find my_robots)/config/base_local_planner_params.yaml" command="load" />
+    
+  </node>
+  <!-- Run the map server -->
+  <node name="map_server" pkg="map_server" type="map_server" args="$(find my_robots)/maps/test2.yaml" />
+
+  <include file="$(find my_robots)/include/amcl_jackal.launch">
+  </include>
+  <!--<include file="$(find my_robots)/include/laser_scan_assembler.launch">
+  </include>-->
+</launch>
+
